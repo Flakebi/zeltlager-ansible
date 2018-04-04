@@ -1,0 +1,72 @@
+---
+- include_vars: "{{ item }}"
+  with_first_found:
+    - "../vars/{{ ansible_os_family }}.yml"
+    - "../vars/Default.yml"
+- name: Install postfix
+  package: name={{ item }}
+  with_items: "{{ postfix_packages }}"
+
+- name: Add os vars
+  set_fact:
+    postfix_options: "{{ postfix_settings | combine(postfix_os_settings) }}"
+- name: Postfix config files
+  template:
+    src: '{{ item }}'
+    dest: /etc/postfix/{{ item | basename | splitext | first }}
+    mode: 0640
+  with_fileglob: ['../templates/*']
+  notify: Reload postfix
+- name: Postfix sql directory
+  file:
+    state: directory
+    path: /etc/postfix/sql
+    mode: 0750
+- name: Postfix config templates
+  template:
+    src: '{{ item }}'
+    dest: /etc/postfix/sql/{{ item | basename | splitext | first }}
+    mode: 0640
+  with_fileglob: ['../templates/sql/*']
+  notify: Reload postfix
+- name: Postfix config files
+  copy:
+    dest: /etc/postfix/
+    src: ./
+  notify: Reload postfix
+- name: Create DH parameters
+  command: openssl dhparam -out /etc/postfix/dhparams.pem 4096
+  args:
+    creates: /etc/postfix/dhparams.pem
+- name: Protect dh parameters
+  file:
+    path: /etc/postfix/dhparams.pem
+    mode: 0640
+
+- name: Create chroot etc directory
+  file: state=directory path=/var/spool/postfix/etc
+- name: Copy files into chroot
+  copy:
+    remote_src: True
+    src: '{{ item }}'
+    dest: /var/spool/postfix{{ item }}
+  with_items: [/etc/resolv.conf, /etc/services]
+- name: Create directory in chroot
+  file: state=directory path=/var/spool/postfix/var/lib/postfix
+- name: Link files from chroot
+  file:
+    state: link
+    src: /var/spool/postfix/var/lib/postfix/postscreen_cache.db
+    dest: /var/lib/postfix/postscreen_cache.db
+    force: True
+    owner: postfix
+    group: postfix
+
+# Rerun on change
+- name: Create postfix transport db
+  command: postmap /etc/postfix/{{ item }}
+  args:
+    creates: /etc/postfix/{{ item }}.db
+  with_items: [transport, without_ptr, postscreen_access]
+- name: Start and enable postfix
+  service: name=postfix state=started enabled=True

@@ -1,0 +1,5 @@
+user = postfix
+password = {{ postfix_db_password }}
+hosts = 127.0.0.1
+dbname = postfix
+query = SELECT CONCAT(destination_username, '@', destination_domain) AS destinations FROM aliases WHERE '%u' ~ CONCAT('^', source_username, '$') AND source_domain = '%d' AND enabled = true AND is_regex = true;

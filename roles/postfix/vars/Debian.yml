@@ -1,0 +1,13 @@
+---
+postfix_os_settings:
+  command_directory: /usr/bin
+  daemon_directory: /usr/lib/postfix/sbin
+  sendmail_path: /usr/bin/sendmail
+  newaliases_path: /usr/bin/newaliases
+  mailq_path: /usr/bin/mailq
+  postconf_path: /usr/sbin/postconf
+  postlog_path: /usr/sbin/postlog
+  shlib_directory: /usr/lib/postfix
+  inet_protocols: all
+  smtp_tls_CAfile: '/etc/ssl/certs/ca-certificates.crt'
+postfix_packages: [postfix, postfix-pgsql]

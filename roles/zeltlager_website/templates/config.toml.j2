@@ -1,0 +1,17 @@
+max_members = 80
+max_members_reached = '<div class="alert alert-primary" role="alert">Das Zeltlager für dieses Jahr ist leider schon voll.</div>'
+error_message = "Bitte informieren Sie uns über webmaster@meinzeltlager.com."
+bind_address = "127.0.0.1:{{ zeltlager_website_port }}"
+
+[sender_mail]
+name = "Die Zeltlager Betreuer"
+address = "anmeldung@{{ mail_domain }}"
+
+[sender_mail_account]
+host = "{{ mail_hostname }}"
+name = "hostmaster@{{ mail_domain }}"
+password = "{{ zeltlager_website_mail_password }}"
+
+[[additional_mail_receivers]]
+name = "Ansgar"
+address = "ansgar.ruggaber@dpma.de"

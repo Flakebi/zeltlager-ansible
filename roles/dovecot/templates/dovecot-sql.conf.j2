@@ -1,0 +1,10 @@
+driver = pgsql
+connect = "host=127.0.0.1 dbname=postfix user=postfix password={{ postfix_db_password }}"
+# http://wiki2.dovecot.org/Authentication/PasswordSchemes
+default_pass_scheme = SHA256-CRYPT
+
+# Get the mailbox
+user_query = SELECT concat('*:storage=', quota, 'M') AS quota_rule FROM accounts WHERE username = '%n' AND domain = '%d' AND sendonly = false;
+# Get the password
+password_query = SELECT username AS user, domain, password FROM accounts WHERE username = '%n' AND domain = '%d' AND enabled = true;
+iterate_query = SELECT username, domain FROM accounts WHERE sendonly = false;

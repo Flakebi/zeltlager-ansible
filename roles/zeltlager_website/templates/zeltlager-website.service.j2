@@ -1,0 +1,15 @@
+[Unit]
+Description=A website for our zeltlager
+
+[Service]
+User=zeltlager
+Group=zeltlager
+WorkingDirectory=/home/zeltlager/website
+{% if cargo_command is failed %}
+ExecStart=/home/zeltlager/.cargo/bin/cargo run --release
+{% else %}
+ExecStart={{ cargo_command.stdout }} run --release
+{% endif %}
+
+[Install]
+WantedBy=multi-user.target

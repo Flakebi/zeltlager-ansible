@@ -1,0 +1,2 @@
+---
+dovecot_packages: [dovecot, dovecot-pgsql, dovecot-pigeonhole]

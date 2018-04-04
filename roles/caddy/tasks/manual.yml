@@ -1,0 +1,83 @@
+---
+- name: "{{ caddy_user }} user"
+  user: name={{ caddy_user }}
+
+- name: caddy config directory
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ caddy_user }}"
+    mode: '0770'
+  with_items:
+    - "{{ caddy_conf_dir }}"
+    - "{{ caddy_conf_dir }}/sites"
+    - "/etc/ssl/caddy"
+
+- name: Install go
+  command: snap install --classic go
+  args:
+    creates: /snap/bin/go
+  tags: caddy_install
+
+- name: Download caddy
+  command: go get github.com/mholt/caddy/caddy
+  args:
+    creates: /home/builder/.go/src/github.com/mholt/caddy
+  environment:
+    GOPATH: /home/builder/.go
+  become: True
+  become_user: builder
+  tags: caddy_install
+
+- name: Download caddy
+  command: go get github.com/caddyserver/builds
+  args:
+    creates: /home/builder/.go/src/github.com/caddyserver/builds
+  environment:
+    GOPATH: /home/builder/.go
+  become: True
+  become_user: builder
+  tags: caddy_install
+
+- name: Build caddy
+  command: go run build.go
+  args:
+    creates: /home/builder/.go/src/github.com/mholt/caddy/caddy/caddy
+    chdir: /home/builder/.go/src/github.com/mholt/caddy/caddy
+  environment:
+    GOPATH: /home/builder/.go
+  become: True
+  become_user: builder
+  tags: caddy_install
+
+- name: Create caddy directory
+  file:
+    path: /opt/caddy
+    state: directory
+  tags: caddy_install
+
+- name: Copy caddy binary
+  command: cp /home/builder/.go/src/github.com/mholt/caddy/caddy/caddy /opt/caddy/
+  args:
+    creates: /opt/caddy/caddy
+  tags: caddy_install
+
+- name: Set caddy file rights
+  file:
+    path: /opt/caddy/caddy
+    owner: root
+    group: root
+  tags: caddy_install
+
+- name: Copy caddy service
+  command: cp /home/builder/.go/src/github.com/mholt/caddy/dist/init/linux-systemd/caddy.service /etc/systemd/system/
+  args:
+    creates: /etc/systemd/system/caddy.service
+  tags: caddy_install
+
+- name: Set caddy service file rights
+  file:
+    path: /etc/systemd/system/caddy.service
+    owner: root
+    group: root
+  tags: caddy_install

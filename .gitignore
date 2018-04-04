@@ -1,0 +1,4 @@
+password.txt
+id_ansible
+*.retry
+fact-cache

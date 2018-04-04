@@ -1,0 +1,3 @@
+---
+- name: Restart zeltlager-website
+  service: name=zeltlager-website state=restarted

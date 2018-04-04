@@ -1,0 +1,5 @@
+user = postfix
+password = {{ postfix_db_password }}
+hosts = 127.0.0.1
+dbname = postfix
+query = SELECT 1 as found FROM accounts WHERE username = '%u' AND domain = '%d' and enabled = true LIMIT 1;

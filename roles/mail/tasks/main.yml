@@ -1,0 +1,85 @@
+---
+- group: name=vmail
+- name: Create mail user and group
+  user:
+    name: vmail
+    group: vmail
+    shell: /usr/bin/nologin
+    home: /var/vmail
+- file:
+    state: directory
+    path: /var/vmail/{{ item }}
+    mode: 0770
+    owner: vmail
+    group: vmail
+  with_items: [mailboxes, sieve, sieve/global]
+
+- name: Protect mail directory
+  file:
+    state: directory
+    path: /var/spool/mail
+    mode: 0755
+    owner: root
+    group: root
+  when: ansible_distribution != 'Ubuntu'
+- name: Protect mail directory
+  file:
+    state: directory
+    path: /var/mail
+    mode: 0755
+    owner: root
+    group: root
+  when: ansible_distribution == 'Ubuntu'
+- name: Protect mail directory
+  file:
+    state: directory
+    path: /etc/ssl/mail
+    mode: 0750
+    owner: root
+    group: root
+
+- name: Create mail database user
+  postgresql_user:
+    name: postfix
+    password: '{{ postfix_db_password }}'
+    encrypted: True
+    role_attr_flags: LOGIN
+  become: True
+  become_user: postgres
+- name: Create mail database
+  postgresql_db:
+    name: postfix
+    owner: postfix
+    lc_collate: '{{ postgresql_locale }}'
+    lc_ctype: '{{ postgresql_locale }}'
+    encoding: UTF-8
+    template: template0
+  become: True
+  become_user: postgres
+
+- import_role: name=postfix
+  tags: postfix
+
+- name: Check if tables exist
+  shell: psql -c '\dt' postfix | grep domains
+  become: True
+  become_user: postfix
+  ignore_errors: True
+  register: db_exists
+- name: Create tables
+  block:
+    - copy:
+        src: create_tables.sql
+        dest: /tmp/mail_create_tables.sql
+    - command: psql -f /tmp/mail_create_tables.sql postfix
+      become: True
+      become_user: postfix
+    - file:
+        state: absent
+        path: /tmp/mail_create_tables.sql
+  when: db_exists is failed
+
+- import_role: name=dovecot
+  tags: dovecot
+- import_role: name=rspamd
+  tags: rspamd

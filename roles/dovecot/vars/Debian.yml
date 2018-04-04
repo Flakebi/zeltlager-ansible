@@ -1,0 +1,2 @@
+---
+dovecot_packages: [dovecot-core, dovecot-pgsql, dovecot-lmtpd, dovecot-managesieved]

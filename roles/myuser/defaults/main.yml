@@ -1,0 +1,5 @@
+---
+myuser_group: users
+myuser_create: True
+myuser_ssh: True
+myuser_files: True

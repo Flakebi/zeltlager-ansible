@@ -1,0 +1,27 @@
+---
+- include_vars: "{{ item }}"
+  with_first_found:
+    - "../vars/{{ ansible_os_family }}.yml"
+    - "../vars/Default.yml"
+- name: Install dovecot
+  package: name={{ item }}
+  with_items: "{{ dovecot_packages }}"
+
+- name: Dovecot config templates
+  template:
+    src: '{{ item }}'
+    dest: /etc/dovecot/{{ item | basename | splitext | first }}
+  with_fileglob: ['../templates/*']
+  notify: Reload dovecot
+- name: Protect dovecot config
+  file:
+    state: file
+    path: /etc/dovecot/dovecot-sql.conf
+    mode: 0640
+- name: Dovecot sieve file
+  copy:
+    src: global-sieve/
+    dest: /var/vmail/sieve/global
+  notify: Reload dovecot
+- name: Start and enable dovecot
+  service: name=dovecot state=started enabled=True

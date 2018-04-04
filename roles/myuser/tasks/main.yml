@@ -1,0 +1,39 @@
+---
+- name: Create myuser {{ myuser_name }}
+  user:
+    name: '{{ myuser_name }}'
+    group: '{{ myuser_group }}'
+    shell: /bin/bash
+  when: myuser_create
+
+- name: Get home
+  getent:
+    database: passwd
+    key: '{{ myuser_name }}'
+    split: ':'
+  when: myuser_files
+- set_fact:
+    myuser_home: '{{ getent_passwd[myuser_name][4] }}'
+  when: myuser_files
+- name: Create directories
+  file:
+    state: directory
+    owner: '{{ myuser_name }}'
+    group: '{{ myuser_group }}'
+    mode: 0755
+    path: '{{ myuser_home }}/{{ item }}'
+  with_items: [ .config, .config/htop ]
+  when: myuser_files
+- name: Copy files
+  copy:
+    dest: '{{ myuser_home }}/{{ item.key }}'
+    src: '{{ item.value }}'
+    owner: '{{ myuser_name }}'
+    group: '{{ myuser_group }}'
+  with_dict:
+    .bashrc: bashrc
+    .profile: profile
+    .config/htop/: htoprc
+    .tmux.conf: tmux.conf
+    .config/: fish
+  when: myuser_files

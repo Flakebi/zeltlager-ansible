@@ -1,0 +1,5 @@
+user = postfix
+password = {{ postfix_db_password }}
+hosts = 127.0.0.1
+dbname = postfix
+query = SELECT policy, params FROM tlspolicies WHERE domain = '%s';

@@ -1,0 +1,83 @@
+---
+- include_role: name=myuser
+  vars:
+    myuser_name: zeltlager
+- import_role: name=myuser
+  vars:
+    myuser_name: builder
+    myuser_ssh: False
+- include_role: name=myuser
+  vars:
+    myuser_name: ansible
+    myuser_ssh: False
+- name: Add ansible key
+  authorized_key:
+    user: ansible
+    key: "{{ lookup('file', 'id_ansible.pub') }}"
+    exclusive: True
+- name: Configure root
+  include_role: name=myuser
+  vars:
+    myuser_name: root
+    myuser_create: False
+    myuser_ssh: False
+
+- name: Install useful packages
+  package:
+    name: "{{ item }}"
+  with_items: [htop, net-tools, curl, git, haveged, mlocate, tmux, fish, rsync]
+  tags: pkgs
+- name: Install arch packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: [gawk, neovim, ripgrep, exa, fd, openbsd-netcat, base-devel]
+  when: ansible_os_family == 'Archlinux'
+  tags: pkgs
+- name: install fedora packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: [bind-utils]
+  when: ansible_os_family == 'RedHat'
+  tags: pkgs
+
+- name: Enable haveged
+  service: name=haveged state=started enabled=True
+
+- name: Generate locale
+  locale_gen: name={{ item }}.UTF-8
+  with_items: [ en_US, de_DE ]
+  tags: locale
+- name: Set locale
+  copy:
+    dest: /etc/locale.conf
+    src: locale.conf
+    owner: root
+    group: root
+  tags: locale
+
+- name: Set max journal size
+  lineinfile:
+    path: /etc/systemd/journald.conf
+    regexp: '^#?SystemMaxUse'
+    line: 'SystemMaxUse=50M'
+  tags: defaults_journald
+
+- name: Autoupdate
+  block:
+    - copy:
+        dest: /etc/systemd/system/
+        src: "{{ item }}"
+      with_items:
+        - update.service
+        - update.timer
+    - service: name=update.timer state=started enabled=true
+  when: ansible_os_family == 'Archlinux' and enable_autoupdate
+  tags: autoupdate
+- name: Autoupdate
+  block:
+    - package: name=unattended-upgrades
+    - service: name=unattended-upgrades state=started enabled=true
+  when: ansible_distribution == 'Ubuntu' and enable_autoupdate
+  tags: defaults_autoupdate

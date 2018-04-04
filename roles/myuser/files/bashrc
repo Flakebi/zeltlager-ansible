@@ -1,0 +1,67 @@
+# Use 4 spaces for tabs
+tabs -4 > /dev/null
+
+# Also set the man pager
+#export MANPAGER='nvim -c MANPAGER -'
+# Less with color support, tab size = 4, repaint if scrolling more than 100 lines
+# With -FX, content is written directly if it's less than a page
+export LESS='-R -x4 -z100'
+# Default editor
+export EDITOR='vim'
+# Default browser
+export BROWSER='firefox'
+# Make scons less verbose
+export SCONSFLAGS='-Q'
+# Suppress warning for accessability bus
+export NO_AT_BRIDGE=1
+# Android emulator
+export ANDROID_EMULATOR_USE_SYSTEM_LIBS=1
+# Incremental compilation
+export CARGO_INCREMENTAL=1
+# Rust backtraces
+export RUST_BACKTRACE=1
+# Needed for racer (rust completion)
+export RUST_SRC_PATH="/usr/src/rust/src"
+# Accelerate Rust, compile with `cargo build --release --features simd-accel`
+#export RUSTFLAGS='-C target-cpu=native'
+# Add own scripts to path
+export PATH="$PATH:$HOME/.cargo/bin"
+# Go path
+export GOPATH="$HOME/.go"
+# For java applications
+export JAVA_HOME="/usr/lib/jvm/default"
+# Enable true color support in neovim
+export NVIM_TUI_ENABLE_TRUE_COLOR=1
+# Minimize steam when clicking the close button
+export STEAM_FRAME_FORCE_CLOSE=1
+#
+export MOZ_DISABLE_PANGO=1
+# Fix java UI
+export _JAVA_OPTIONS="-Dawt.useSystemAAFontSettings=on -Dswing.aatext=true -Dswing.defaultlaf=com.sun.java.swing.plaf.gtk.GTKLookAndFeel"
+# Select true type fonts for java
+export JAVA_FONTS="/usr/share/fonts/TTF"
+# Don't minimize sdl windows
+export SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS=0
+# Support XCompose
+export GTK_IM_MODULE="xim"
+# Change GTK+ theme
+export GTK_THEME="Arc:dark"
+# Change Qt theme
+export QT_QPA_PLATFORMTHEME="gtk2"
+# Change default terminal for way-cooler
+export WAYLAND_TERMINAL="terminator"
+
+# If not running interactively, don't do the rest
+[[ $- != *i* ]] && return
+
+# bash aliases
+alias ls='ls --color=auto'
+alias ll='ls -Al'
+alias gitl='git log --oneline --first-parent HEAD~$1..HEAD'
+#PS1='[\u@\h \W]\$ '
+
+if [ "$bash" != "1" ]; then
+	exec fish
+else
+	shift
+fi

@@ -1,0 +1,5 @@
+user = postfix
+password = {{ postfix_db_password }}
+hosts = 127.0.0.1
+dbname = postfix
+query = SELECT CASE WHEN sendonly = true THEN 'REJECT' ELSE 'OK' END AS access FROM accounts WHERE username = '%u' AND domain = '%d' AND enabled = true LIMIT 1;

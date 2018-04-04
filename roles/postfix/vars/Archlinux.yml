@@ -1,0 +1,11 @@
+---
+postfix_os_settings:
+  command_directory: /usr/bin
+  daemon_directory: /usr/lib/postfix/bin
+  sendmail_path: /usr/bin/sendmail
+  newaliases_path: /usr/bin/newaliases
+  mailq_path: /usr/bin/mailq
+  shlib_directory: /usr/lib/postfix
+  inet_protocols: ipv4
+  smtp_tls_CAfile: '/etc/ssl/certs/ca-certificates.crt'
+postfix_packages: [postfix]

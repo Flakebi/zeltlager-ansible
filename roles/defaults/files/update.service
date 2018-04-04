@@ -1,0 +1,6 @@
+[Unit]
+Description=Update using pacman
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/pacman -Syu --noconfirm

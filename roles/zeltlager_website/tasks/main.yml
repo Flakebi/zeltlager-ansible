@@ -1,0 +1,108 @@
+---
+- group: name=zeltlager
+- import_role: name=myuser
+  vars:
+    myuser_name: zeltlager
+    myuser_group: zeltlager
+
+- name: Create zeltlager database user
+  postgresql_user:
+    name: zeltlager
+    password: '{{ zeltlager_db_password }}'
+    encrypted: True
+    role_attr_flags: LOGIN
+  become: True
+  become_user: postgres
+- name: Create zeltlager database
+  postgresql_db:
+    name: zeltlager
+    owner: zeltlager
+    lc_collate: '{{ postgresql_locale }}'
+    lc_ctype: '{{ postgresql_locale }}'
+    encoding: UTF-8
+    template: template0
+  become: True
+  become_user: postgres
+
+- name: Install rustup on arch
+  package: name=rustup
+  when: ansible_os_family == 'Archlinux'
+
+- name: Check if rustup is installed
+  command: which rustup
+  register: rustup_command
+  ignore_errors: True
+  become: True
+  become_user: zeltlager
+  when: ansible_os_family != 'Archlinux'
+
+- name: Install rustup
+  shell: curl https://sh.rustup.rs -sSf | sh -s -- -y
+  args:
+    creates: /home/zeltlager/.rustup
+  when: rustup_command is failed and ansible_os_family != 'Archlinux'
+  become: True
+  become_user: zeltlager
+
+- name: Install cargo with rustup
+  command: rustup toolchain add stable
+  args:
+    creates: /home/zeltlager/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo
+  become: True
+  become_user: zeltlager
+
+- name: Set default rustup toolchain
+  command: rustup default stable
+  args:
+    creates: /home/zeltlager/.cargo/registry
+  become: True
+  become_user: zeltlager
+
+- name: Find out where cargo is installed
+  command: which cargo
+  register: cargo_command
+  become: True
+  become_user: zeltlager
+
+- name: Install diesel_cli
+  command: cargo install diesel_cli
+  args:
+    creates: /home/zeltlager/.cargo/bin/diesel
+  become: True
+  become_user: zeltlager
+
+# Still need to run `diesel setup`
+
+- name: Download zeltlager website
+  git:
+    repo: https://github.com/lacinoire/zeltlager-website.git
+    update: False
+    dest: /home/zeltlager/website
+  become: True
+  become_user: zeltlager
+
+- name: Zeltlager-Website config file
+  template:
+    src: config.toml.j2
+    dest: /home/zeltlager/website/config.toml
+    owner: zeltlager
+    group: zeltlager
+    mode: 0640
+  tags: zeltlager_website_config
+  notify: Restart zeltlager-website
+- name: Zeltlager-Website env file
+  template:
+    src: env.j2
+    dest: /home/zeltlager/website/.env
+    owner: zeltlager
+    group: zeltlager
+    mode: 0640
+  tags: zeltlager_website_config
+  notify: Restart zeltlager-website
+- name: zeltlager-website service
+  template:
+    src: zeltlager-website.service.j2
+    dest: /etc/systemd/system/zeltlager-website.service
+
+- name: Start and enable zeltlager-website
+  service: name=zeltlager-website state=started enabled=True

@@ -1,0 +1,9 @@
+[submodule "roles/weareinteractive.sudo"]
+	path = roles/weareinteractive.sudo
+	url = https://github.com/weareinteractive/ansible-sudo.git
+[submodule "roles/geerlingguy.postgresql"]
+	path = roles/geerlingguy.postgresql
+	url = https://github.com/Flakebi/ansible-role-postgresql
+[submodule "library/ansible-aur"]
+	path = library/ansible-aur
+	url = https://github.com/pigmonkey/ansible-aur.git

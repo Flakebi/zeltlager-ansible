@@ -1,0 +1,41 @@
+---
+- name: Install caddy
+  aur: name=caddy user=ansible
+  when: ansible_os_family == 'Archlinux'
+- name: Install caddy
+  import_tasks: manual.yml
+  when: ansible_os_family != 'Archlinux'
+
+- name: caddy defaults
+  copy:
+    content: "{{ item.value }}"
+    dest: "{{ caddy_conf_dir }}/{{ item.key }}"
+    owner: "{{ caddy_user }}"
+    mode: '0644'
+  with_dict: "{{ caddy_includes }}"
+  notify: Reload caddy
+  tags: caddy_config
+
+- name: caddy config directory
+  file:
+    path: "{{ caddy_conf_dir }}/sites"
+    state: directory
+    owner: "{{ caddy_user }}"
+    mode: '0770'
+
+- name: caddy sites
+  copy:
+    content: "{{ item.value }}"
+    dest: "{{ caddy_conf_dir }}/sites/{{ item.key }}"
+    owner: "{{ caddy_user }}"
+    mode: '0644'
+  with_dict: "{{ caddy_sites }}"
+  notify: Reload caddy
+  tags: caddy_config
+
+- name: Create Caddyfile
+  copy: content="import sites/*" dest="{{ caddy_conf_dir }}/{{ caddy_conf_file }}" owner={{ caddy_user }}
+  notify: Reload caddy
+
+- name: Enable caddy
+  service: name=caddy state=started enabled=True

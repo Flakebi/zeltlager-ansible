@@ -1,0 +1,34 @@
+---
+- hosts: all
+  tasks:
+    - include_role:
+        name: weareinteractive.sudo
+      vars:
+        sudo_sudoers_file: '10_wheel'
+        sudo_defaults:
+          - defaults: insults
+        sudo_users:
+          - name: '%wheel'
+          - name: ansible
+            nopasswd: True
+      tags: sudo
+    - import_role:
+        name: defaults
+      tags: defaults
+      when: "'defaults' in roles"
+    - import_role:
+        name: postgresql
+      tags: postgresql
+      when: "'postgresql' in roles"
+    - import_role:
+        name: caddy
+      tags: caddy
+      when: "'caddy' in roles"
+    - import_role:
+        name: mail
+      tags: mail
+      when: "'mail' in roles"
+    - import_role:
+        name: zeltlager_website
+      tags: zeltlager_website
+      when: "'zeltlager_website' in roles"
