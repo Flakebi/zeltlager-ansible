@@ -135,7 +135,22 @@ caddy_includes:
     }
 
 enable_autoupdate: True
+sshd_host_settings: []
+sshd_settings:
+  - regexp: "^#?Port "
+    line: "Port {{ sshd_port }}"
+  - regexp: "^#?PermitRootLogin "
+    line: PermitRootLogin no
+  - regexp: "^#?MaxAuthTries "
+    line: MaxAuthTries 1
+  - regexp: "^#?PasswordAuthentication "
+    line: PasswordAuthentication no
+  - regexp: "^#?AllowAgentForwarding "
+    line: AllowAgentForwarding no
+  - regexp: "^#?PermitTunnel "
+    line: PermitTunnel yes
 
 powerdns_master: False
 
+sshd_port: 4242
 zeltlager_website_port: 9007

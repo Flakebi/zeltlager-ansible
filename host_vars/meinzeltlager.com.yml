@@ -1,6 +1,7 @@
 ---
 roles:
   - defaults
+  - sshd
   - caddy
   - postgresql
   - mail
@@ -24,6 +25,10 @@ caddy_sites:
         transparent
       }
     }
+
+sshd_host_settings:
+  - regexp: "^#?AllowUsers "
+    line: AllowUsers ansible zeltlager
 
 acme_path: /var/lib/caddy/acme/acme-v02.api.letsencrypt.org
 dovecot_settings:

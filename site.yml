@@ -17,6 +17,10 @@
       tags: defaults
       when: "'defaults' in roles"
     - import_role:
+        name: sshd
+      tags: sshd
+      when: "'sshd' in roles"
+    - import_role:
         name: postgresql
       tags: postgresql
       when: "'postgresql' in roles"
