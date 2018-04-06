@@ -5,11 +5,7 @@ Description=A website for our zeltlager
 User=zeltlager
 Group=zeltlager
 WorkingDirectory=/home/zeltlager/website
-{% if cargo_command is failed %}
-ExecStart=/home/zeltlager/.cargo/bin/cargo run --release
-{% else %}
-ExecStart={{ cargo_command.stdout }} run --release
-{% endif %}
+ExecStart=/home/zeltlager/website/target/release/zeltlager-website
 
 [Install]
 WantedBy=multi-user.target

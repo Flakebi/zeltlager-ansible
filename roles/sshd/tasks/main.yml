@@ -14,5 +14,5 @@
   with_items: "{{ sshd_options }}"
   notify: Reload sshd
 
-  - name: Start and enable sshd
-    service: name=sshd state=started enabled=True
+- name: Start and enable sshd
+  service: name=sshd state=started enabled=True

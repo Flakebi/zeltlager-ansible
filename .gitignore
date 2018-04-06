@@ -1,4 +1,5 @@
 password.txt
 id_ansible
+/id_ansible.pub
 *.retry
 fact-cache
