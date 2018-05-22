@@ -1,11 +1,17 @@
 [Unit]
 Description=A website for our zeltlager
+After=postgresql.service
 
 [Service]
 User=zeltlager
 Group=zeltlager
 WorkingDirectory=/home/zeltlager/website
 ExecStart=/home/zeltlager/website/target/release/zeltlager-website
+Restart=on-failure
+RestartSec=1
+StartLimitInterval=10
+StartLimitBurst=3
+Environment=RUST_BACKTRACE=1
 
 [Install]
 WantedBy=multi-user.target

@@ -103,6 +103,8 @@
   template:
     src: zeltlager-website.service.j2
     dest: /etc/systemd/system/zeltlager-website.service
+  tags: zeltlager_website_service
 
 - name: Start and enable zeltlager-website
   service: name=zeltlager-website state=started enabled=True
+  tags: zeltlager_website_service
