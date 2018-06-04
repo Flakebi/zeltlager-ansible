@@ -26,6 +26,15 @@ caddy_sites:
       }
     }
 
+    meinzeltlager.com/google9cea32bbccdb1ab4.html {
+      import ../defaults
+      import ../ssl_defaults
+      rewrite {
+        to /google9cea32bbccdb1ab4.html
+      }
+      root /srv/http/html
+    }
+
 sshd_host_settings:
   - regexp: "^#?AllowUsers "
     line: AllowUsers ansible zeltlager

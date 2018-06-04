@@ -108,3 +108,12 @@
 - name: Start and enable zeltlager-website
   service: name=zeltlager-website state=started enabled=True
   tags: zeltlager_website_service
+
+- name: Create html directory
+  file: state=directory path=/srv/http/html
+  tags: zeltlager_website_google_auth
+- name: Google authentication file
+  copy:
+    src: google9cea32bbccdb1ab4.html
+    dest: /srv/http/html/
+  tags: zeltlager_website_google_auth
