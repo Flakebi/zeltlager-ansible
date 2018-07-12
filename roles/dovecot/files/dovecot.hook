@@ -1,0 +1,9 @@
+[Trigger]
+Type = Package
+Operation = Upgrade
+Target = dovecot
+
+[Action]
+Description = Restarting dovecot...
+When = PostTransaction
+Exec = /usr/bin/systemctl try-restart dovecot

@@ -23,5 +23,12 @@
     src: global-sieve/
     dest: /var/vmail/sieve/global
   notify: Reload dovecot
+
+- name: Restart dovecot on updates
+  copy:
+    src: dovecot.hook
+    dest: /etc/pacman.d/hooks/
+  when: ansible_os_family == 'Archlinux'
+
 - name: Start and enable dovecot
   service: name=dovecot state=started enabled=True
