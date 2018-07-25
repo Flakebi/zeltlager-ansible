@@ -89,7 +89,7 @@
     group: zeltlager
     mode: 0640
   tags: zeltlager_website_config
-  notify: Restart zeltlager-website
+  #notify: Restart zeltlager-website
 - name: Zeltlager-Website env file
   template:
     src: env.j2
@@ -98,7 +98,7 @@
     group: zeltlager
     mode: 0640
   tags: zeltlager_website_config
-  notify: Restart zeltlager-website
+  #notify: Restart zeltlager-website
 - name: zeltlager-website service
   template:
     src: zeltlager-website.service.j2
