@@ -1,0 +1,61 @@
+---
+- name: Install mediawiki
+  package: name={{ item }}
+  with_items: [mediawiki, php-gd, php-intl, php-pgsql]
+
+- name: Install visual editor for mediawiki
+  aur: name=parsoid-git user=ansible
+  when: ansible_os_family == 'Archlinux'
+
+- name: Create mediawiki database user
+  postgresql_user:
+    name: mediawiki
+    password: '{{ mediawiki_db_password }}'
+    encrypted: True
+    role_attr_flags: LOGIN
+  become: True
+  become_user: postgres
+- name: Create mediawiki database
+  postgresql_db:
+    name: mediawiki
+    owner: mediawiki
+    lc_collate: '{{ postgresql_locale }}'
+    lc_ctype: '{{ postgresql_locale }}'
+    encoding: UTF-8
+    template: template0
+  become: True
+  become_user: postgres
+- name: Mediawiki settings
+  template:
+    src: LocalSettings.php.j2
+    dest: /usr/share/webapps/mediawiki/LocalSettings.php
+    mode: 0640
+    owner: root
+    group: "{{ caddy_user }}"
+  tags: mediawiki_settings
+
+- name: Set mediawiki icon
+  copy:
+    src: icon.png
+    dest: /usr/share/webapps/mediawiki/resources/assets/
+
+- name: Set mediawiki icon
+  copy:
+    src: favicon.png
+    dest: /usr/share/webapps/mediawiki/resources/assets/
+
+- name: Download visual editor
+  unarchive:
+    remote_src: True
+    src: https://extdist.wmflabs.org/dist/extensions/VisualEditor-REL1_31-13a585a.tar.gz
+    dest: /usr/share/webapps/mediawiki/extensions/
+
+- name: Parsoid settings
+  template:
+    src: config.yaml.j2
+    dest: /usr/share/webapps/parsoid/config.yaml
+  tags: mediawiki_settings
+  notify: Restart parsoid
+
+- name: Start and enable parsoid
+  service: name=parsoid state=started enabled=True

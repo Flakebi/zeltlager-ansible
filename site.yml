@@ -45,6 +45,10 @@
       tags: phpmyadmin
       when: "'phpmyadmin' in roles"
     - import_role:
+        name: mediawiki
+      tags: mediawiki
+      when: "'mediawiki' in roles"
+    - import_role:
         name: zeltlager_website
       tags: zeltlager_website
       when: "'zeltlager_website' in roles"

@@ -160,4 +160,5 @@ zeltlager_error_message: !vault |
 
 sshd_port: 4242
 phpmyadmin_port: 8080
+parsoid_port: 9001
 zeltlager_website_port: 9007

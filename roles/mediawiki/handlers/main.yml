@@ -1,0 +1,3 @@
+---
+- name: Restart parsoid
+  service: name=parsoid state=restarted

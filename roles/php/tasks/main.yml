@@ -3,6 +3,7 @@
   with_first_found:
     - "../vars/{{ ansible_os_family }}.yml"
     - "../vars/Default.yml"
+  tags: php_extensions
 - name: Install packets
   package: name={{ item }}
   with_items: "{{ php_packages }}"
@@ -13,6 +14,15 @@
     regexp: ';?extension={{ item }}'
     line:   'extension={{ item }}'
   with_items: '{{ php_extensions }}'
+  tags: php_extensions
+  notify: Reload php-fpm
+
+- name: Configure php
+  lineinfile:
+    path: /etc/php/php.ini
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items: "{{ php_settings | default([]) }}"
   notify: Reload php-fpm
 
 - name: Start php fpm
