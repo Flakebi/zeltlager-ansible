@@ -12,16 +12,19 @@
     src: '{{ item }}'
     dest: /etc/dovecot/{{ item | basename | splitext | first }}
   with_fileglob: ['../templates/*']
+  tags: dovecot_config
   notify: Reload dovecot
 - name: Protect dovecot config
   file:
     state: file
     path: /etc/dovecot/dovecot-sql.conf
     mode: 0640
+  tags: dovecot_config
 - name: Dovecot sieve file
   copy:
     src: global-sieve/
     dest: /var/vmail/sieve/global
+  tags: dovecot_config
   notify: Reload dovecot
 
 - name: Restart dovecot on updates

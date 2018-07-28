@@ -1,0 +1,33 @@
+---
+- include_vars: "{{ item }}"
+  with_first_found:
+    - "../vars{{ ansible_os_family }}.yml"
+    - "../vars/Default.yml"
+- name: Install mysql
+  package: name={{ item }}
+  with_items: "{{ mysql_packages }}"
+
+- name: Install mysql dependency
+  aur: name=python-mysqlclient user=ansible
+  when: ansible_os_family == 'Archlinux'
+
+- name: Configure mysql
+  command: mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
+  args:
+    creates: /var/lib/mysql/mysql
+  when: ansible_os_family == 'Archlinux'
+
+# Execute afterwards: mysql_secure_installation
+
+- name: Start and enable mariadb
+  service: name=mariadb state=started enabled=True
+
+- name: Set password for mysql root
+  mysql_user:
+    name: root
+    password: "{{ mysql_root_password }}"
+- name: Store mysql root password in file
+  template:
+    src: my.cnf.j2
+    dest: "{{ ansible_env.HOME }}/.my.cnf"
+    mode: 0600

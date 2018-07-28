@@ -1,0 +1,19 @@
+---
+- include_vars: "{{ item }}"
+  with_first_found:
+    - "../vars/{{ ansible_os_family }}.yml"
+    - "../vars/Default.yml"
+- name: Install packets
+  package: name={{ item }}
+  with_items: "{{ php_packages }}"
+
+- name: Enable php extensions
+  lineinfile:
+    path: '{{ php_ini_path }}/php.ini'
+    regexp: ';?extension={{ item }}'
+    line:   'extension={{ item }}'
+  with_items: '{{ php_extensions }}'
+  notify: Reload php-fpm
+
+- name: Start php fpm
+  service: name=php-fpm state=started enabled=True

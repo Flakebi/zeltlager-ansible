@@ -33,6 +33,18 @@
       tags: mail
       when: "'mail' in roles"
     - import_role:
+        name: php
+      tags: php
+      when: "'php' in roles"
+    - import_role:
+        name: mysql
+      tags: mysql
+      when: "'mysql' in roles"
+    - import_role:
+        name: phpmyadmin
+      tags: phpmyadmin
+      when: "'phpmyadmin' in roles"
+    - import_role:
         name: zeltlager_website
       tags: zeltlager_website
       when: "'zeltlager_website' in roles"

@@ -5,6 +5,9 @@ roles:
   - caddy
   - postgresql
   - mail
+  - php
+  - mysql
+  - phpmyadmin
   - zeltlager_website
 
 caddy_user: http
@@ -35,13 +38,33 @@ caddy_sites:
       root /srv/http/html
     }
 
+    www.meinzeltlager.com {
+      redir 301 {
+        / https://meinzeltlager.com{uri}
+        }
+    }
+
+  webapps: |
+    *:8080 {
+      import ../defaults
+      header / Content-Security-Policy "default-src 'self' 'unsafe-inline' data: ws:"
+      bind 127.0.0.1
+
+      root /usr/share/webapps
+      fastcgi / /run/php-fpm/php-fpm.sock php
+    }
+
 sshd_host_settings:
   - regexp: "^#?AllowUsers "
-    line: AllowUsers ansible zeltlager
+    line: AllowUsers ansible zeltlager alina
 
 acme_path: /var/lib/caddy/acme/acme-v02.api.letsencrypt.org
 dovecot_settings:
-  - listen = *
+  - listen = [::]
+
+php_extensions:
+  - pdo_mysql
+  - mysqli
 
 postgresql_locale: en_US.UTF-8
 postgres_password: !vault |
@@ -51,6 +74,14 @@ postgres_password: !vault |
   34623439616436643338303165323564646430356661356561306636386131646165393730363464
   3931613036643232630a393361353833643661356661626463303136336161313463613136663136
   65633035393732656434306438626138306330343737666265653166623035393562
+
+mysql_root_password: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  37373839653963633961643937333336663530316662326665303230616237323837343538656264
+  3066343839616161616234383531323434333565346433630a303335383362376261653535613830
+  61313833333435326162336161366136663363386662363364353439303335383366376466353663
+  3037333863616331660a396334643863393638643733383533626663666661613065393631643633
+  64386136336331303962373632393736313936663365363561633461346266616534
 
 postfix_db_password: !vault |
   $ANSIBLE_VAULT;1.1;AES256

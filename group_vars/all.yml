@@ -129,10 +129,6 @@ caddy_includes:
 
   ssl_defaults: |
     header / Strict-Transport-Security "max-age=2592000; includeSubDomains" # 30d
-    redir 301 {
-      if {>X-Forwarded-Proto} is http
-      / https://{host}{uri}
-    }
 
 enable_autoupdate: True
 sshd_host_settings: []
@@ -163,4 +159,5 @@ zeltlager_error_message: !vault |
   633036616534396566663832626164663739
 
 sshd_port: 4242
+phpmyadmin_port: 8080
 zeltlager_website_port: 9007

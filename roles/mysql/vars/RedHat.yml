@@ -1,0 +1,2 @@
+---
+mysql_packages: ["mariadb", "mariadb-server", "python2-mysql", "python3-mysql"]
