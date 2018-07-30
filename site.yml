@@ -52,3 +52,7 @@
         name: zeltlager_website
       tags: zeltlager_website
       when: "'zeltlager_website' in roles"
+    - import_role:
+        name: zeltlager_app
+      tags: zeltlager_app
+      when: "'zeltlager_app' in roles"

@@ -10,6 +10,7 @@ roles:
   - phpmyadmin
   - mediawiki
   - zeltlager_website
+  - zeltlager_app
 
 caddy_user: http
 caddy_conf_file: caddy.conf

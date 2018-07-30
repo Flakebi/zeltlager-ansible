@@ -1,0 +1,53 @@
+---
+- import_role: name=myuser
+  vars:
+    myuser_name: zeltlager_app
+
+- name: Install msbuild
+  aur: name=msbuild-stable user=ansible
+
+- name: Install packages
+  package: name={{ item }}
+  with_items: [referenceassemblies-pcl, nuget]
+
+- name: Download zeltlager app
+  git:
+    repo: https://github.com/Flakebi/Zeltlager.git
+    update: False
+    dest: /home/zeltlager_app/Zeltlager
+  become: True
+  become_user: zeltlager_app
+
+- name: Load nuget dependencies
+  command: nuget restore
+  args:
+    chdir: /home/zeltlager_app/Zeltlager
+  become: True
+  become_user: zeltlager_app
+  tags: zeltlager_app_build
+
+- name: Build zeltlager app
+  command: msbuild /p:Configuration=Release
+  args:
+    chdir: /home/zeltlager_app/Zeltlager/Zeltlager/Zeltlager.Server
+  become: True
+  become_user: zeltlager_app
+  tags: zeltlager_app_build
+
+- name: Create storage folder
+  file:
+    state: directory
+    path: /home/zeltlager_app/Lager
+    owner: zeltlager_app
+    group: users
+    mode: 0700
+
+- name: zeltlager-app service
+  template:
+    src: zeltlager-app.service.j2
+    dest: /etc/systemd/system/zeltlager-app.service
+  tags: zeltlager_app_service
+
+- name: Start and enable zeltlager-app
+  service: name=zeltlager-app state=started enabled=True
+  tags: zeltlager_app_service
