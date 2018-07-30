@@ -80,6 +80,9 @@ acme_path: /var/lib/caddy/acme/acme-v02.api.letsencrypt.org
 dovecot_settings:
   - listen = [::]
 
+php_settings:
+  - regexp: "^;?upload_max_filesize"
+    line: upload_max_filesize = 5M
 php_extensions:
   - mysqli
   - pgsql

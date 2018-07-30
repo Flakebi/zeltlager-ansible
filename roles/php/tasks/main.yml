@@ -23,6 +23,7 @@
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
   with_items: "{{ php_settings | default([]) }}"
+  tags: php_settings
   notify: Reload php-fpm
 
 - name: Start php fpm

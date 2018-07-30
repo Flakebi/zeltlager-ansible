@@ -1,12 +1,12 @@
 ---
-- include_role: name=myuser
+- import_role: name=myuser
   vars:
     myuser_name: zeltlager
 - import_role: name=myuser
   vars:
     myuser_name: builder
     myuser_ssh: False
-- include_role: name=myuser
+- import_role: name=myuser
   vars:
     myuser_name: ansible
     myuser_ssh: False
@@ -37,7 +37,10 @@
   with_items: [gawk, neovim, ripgrep, exa, fd, openbsd-netcat, base-devel]
   when: ansible_os_family == 'Archlinux'
   tags: pkgs
-- name: install fedora packages
+- name: Install aur package manager
+  aur: name=yay user=ansible
+  tags: pkgs
+- name: Install fedora packages
   package:
     name: "{{ item }}"
     state: present
