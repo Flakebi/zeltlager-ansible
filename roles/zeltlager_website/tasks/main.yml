@@ -24,6 +24,9 @@
   become: True
   become_user: postgres
 
+- name: Install imagemagick
+  package: name=imagemagick
+
 - name: Install rustup on arch
   package: name=rustup
   when: ansible_os_family == 'Archlinux'
