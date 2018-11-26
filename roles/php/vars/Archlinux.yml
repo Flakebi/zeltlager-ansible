@@ -1,3 +1,0 @@
----
-php_packages: [php, php-fpm, php-sqlite]
-php_ini_path: /etc/php

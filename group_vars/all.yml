@@ -4,6 +4,7 @@ roles: []
 mail_domain: meinzeltlager.com
 mail_hostname: mail.meinzeltlager.com
 
+dkim_key_name: 2018
 postfix_db_name: postfix_db
 
 postfix_settings:

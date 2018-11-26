@@ -1,3 +1,0 @@
----
-- name: Reload rspamd
-  service: name=rspamd state=reloaded
