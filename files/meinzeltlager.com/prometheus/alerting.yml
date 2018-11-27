@@ -1,0 +1,91 @@
+groups:
+  - name: standard
+    rules:
+      - alert: PartitionFull
+        expr: 'node_filesystem_free_bytes / node_filesystem_size_bytes < 0.05'
+        labels:
+          severity: warning
+        annotations:
+          summary: "Partition has less than 5% free space left"
+          description: >
+            Device {{ $labels.device }} mounted at {{ $labels.mountpoint }} from
+            {{ $labels.instance }} is nearly full{{ with printf
+            "node_filesystem_free_bytes{instance='%[1]s', device='%[2]s'}
+            / node_filesystem_size_bytes{instance='%[1]s', device='%[2]s'} * 100"
+            $labels.instance $labels.device | query }}{{
+            $free_percent := . | first | value }}{{ with printf
+            "node_filesystem_free_bytes{instance='%s', device='%s'}"
+            $labels.instance $labels.device | query }}{{
+            $free := . | first | value }}
+            ({{ $free_percent | humanize }}% / {{ $free | humanize }} free){{
+            end }}{{ end }}
+
+      - alert: SystemdUnitFailed
+        expr: 'node_systemd_unit_state{state="failed"} == 1'
+        for: 5m
+        labels:
+          severity: error
+        annotations:
+          summary: "Systemd service {{ $labels.name }} failed"
+          description: Service {{ $labels.name }} failed on {{ $labels.instance }}
+
+      - alert: InstanceDown
+        expr: 'up == 0'
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: "Instance {{ $labels.instance }} down"
+          description: "{{ $labels.instance }} of job {{ $labels.job }} is down"
+
+      - alert: CaddyErrorRate
+        expr: 'sum(delta(caddy_http_response_status_count_total{host!~"^.*\\.services\\.meinzeltlager\\.com", status!~"(2|3).."}[30m])) by (host, instance) / sum(delta(caddy_http_request_count_total[30m])) by (host, instance) > 0.05'
+        labels:
+          severity: warning
+        annotations:
+          summary: "Caddy errors at host {{ $labels.host }}"
+          description: >
+            Error rate
+            {{ with printf "sum(delta(caddy_http_response_status_count_total{status!~'(2|3)..'}[30m])) by (host, instance)
+            / sum(delta(caddy_http_request_count_total{host='%s', instance='%s'}[30m])) by (host, instance) * 100"
+            $labels.host $labels.instance | query }}{{ . | first | value | humanize }}% {{ end }}
+            > 5% in the last 30 minutes at host {{ $labels.host }}
+            ({{ $labels.instance }})
+
+            Error stats:
+
+            {{ range printf "delta(caddy_http_response_status_count_total{host='%[1]s', instance='%[2]s', status!~'(2|3)..'}[30m])
+            / scalar(sum(delta(caddy_http_request_count_total{host='%[1]s', instance='%[2]s'}[30m]))) * 100"
+            $labels.host $labels.instance | query }}
+            {{ .Labels.status }}: {{ .Value | humanize }}%
+
+            {{ end }}
+
+      - alert: CpuUsage
+        expr: '1 - sum by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) / sum by (instance) (irate(node_cpu_seconds_total[5m])) > 0.5'
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Instance {{ $labels.instance }} has much load"
+          description: >
+            {{ $labels.instance }} had
+            {{ with printf "(1 - sum(irate(node_cpu_seconds_total{mode='idle', instance='%[1]s'}[5m])) / sum(irate(node_cpu_seconds_total{instance='%[1]s'}[5m]))) * 100"
+            $labels.instance | query }}{{ . | first | value | humanize }} % {{ end }}load in the last hour
+
+      - alert: MailDown
+        expr: 'script_success{script="mail"} == 0'
+        labels:
+          severity: error
+        annotations:
+          summary: "{{ $labels.job }} script on {{ $labels.instance }} failed"
+          description: "{{ $labels.job }} script on {{ $labels.instance }} failed"
+
+      - alert: BlackboxProbes
+        expr: 'probe_success == 0'
+        for: 5m
+        labels:
+          severity: error
+        annotations:
+          summary: "Blackbox probe {{ $labels.job }} on {{ $labels.instance }} failed"
+          description: "Blackbox probe {{ $labels.job }} on {{ $labels.instance }} failed"

@@ -1,0 +1,38 @@
+global:
+  resolve_timeout: 10m
+
+  smtp_smarthost: '{{ mail_hostname }}:587'
+  smtp_from: 'alertmanager@{{ mail_domain }}'
+  smtp_auth_username: 'alertmanager@{{ mail_domain }}'
+  smtp_auth_password: '{{ alertmanager_mail_password }}'
+
+route:
+  group_by: [alertname]
+  group_wait: 10s
+  #repeat_interval: 1h # Default 4h
+  receiver: admin-mail
+  routes:
+    - receiver: admin-mail
+      match:
+        severity: warning
+
+receivers:
+  - name: admin-mail
+    email_configs:
+      - to: '{{ alertmanager_admin_mail }}'
+    webhook_configs:
+      - url: http://127.0.0.1:{{ prometheus_telegram_bot_port }}/alert/{{ prometheus_telegram_bot_chat }}
+        send_resolved: False
+
+  - name: admin-message
+    webhook_configs:
+      - url: http://127.0.0.1:{{ prometheus_telegram_bot_port }}/alert/{{ prometheus_telegram_bot_chat }}
+        send_resolved: False
+
+# Mute the target alert if a matching source alert already exists
+inhibit_rules:
+  - source_match:
+      severity: critical
+    target_match:
+      severity: warning
+    equal: [alertname, dev, instance]

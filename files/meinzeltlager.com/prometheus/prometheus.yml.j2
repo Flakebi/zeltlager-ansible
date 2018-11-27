@@ -1,0 +1,75 @@
+# Default scrape_interval and evaluation_interval are 1m
+global:
+  scrape_interval: 5m
+  evaluation_interval: 5m
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets: ['127.0.0.1:{{ alertmanager_port }}']
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  - alerting.yml
+
+scrape_configs:
+  - job_name: 'node'
+    static_configs:
+      - targets:
+        - '{{ local_prometheus_ip }}:{{ prometheus_node_exporter_port }}'
+
+  - job_name: 'caddy'
+    static_configs:
+      - targets: ['{{ local_prometheus_ip }}:{{ caddy_prometheus_exporter_port }}']
+
+  - job_name: 'mail'
+    scrape_interval: 15m
+    scrape_timeout: 30s
+    metrics_path: /probe
+    params:
+      name: ['mail']
+    static_configs:
+      - targets: ['{{ local_prometheus_ip }}:{{ prometheus_script_exporter_port }}']
+
+  - job_name: 'blackbox_http'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - 'http://services.meinzeltlager.com:{{ caddy_services_port }}'
+          - 'http://alertmanager.services.flakebi.de:{{ caddy_services_port }}'
+          - 'http://grafana.services.flakebi.de:{{ caddy_services_port }}'
+          - 'http://prometheus.services.flakebi.de:{{ caddy_services_port }}'
+          - 'http://rspamd.services.flakebi.de:{{ caddy_services_port }}'
+        labels:
+          category: private
+      - targets:
+          - 'https://meinzeltlager.com'
+          - 'https://www.meinzeltlager.com'
+        labels:
+          category: public
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: '{{ local_prometheus_ip }}:{{ prometheus_blackbox_exporter_port }}'
+
+  - job_name: 'blackbox_ping'
+    metrics_path: /probe
+    params:
+      module: [ping]
+    static_configs:
+      - targets:
+          - 127.0.0.1 # Sanity
+          - '{{ local_prometheus_ip }}'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: '{{ local_prometheus_ip }}:{{ prometheus_blackbox_exporter_port }}'

@@ -1,0 +1,10 @@
+modules:
+  http_2xx:
+    prober: http
+  http_404:
+    prober: http
+    http:
+      valid_status_codes: [404]
+
+  ping:
+    prober: icmp
