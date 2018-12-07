@@ -7,10 +7,46 @@ roles:
   - mail
   - php
   - mysql
+  - nftables
   - phpmyadmin
+  - prometheus
+  - prometheus_script_exporter
+  - prometheus_telegram_bot
   - mediawiki
   - zeltlager_website
   - zeltlager_app
+  - wireguard
+
+prometheus_server: True
+# WireGuard server
+# Own public key: bRVwKOi8icAUncwN29zeXerzj0WEVcsxdTd6pd29Fi4=
+local_prometheus_ip: 10.2.0.1
+wireguard_configs:
+  - name: promet_server
+    address: "{{ local_prometheus_ip }}/24"
+    listen_port: "{{ wireguard_prometheus_port }}"
+    private_key: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      31323335633732383635636335313732633365386466646532353938646565666333643762386564
+      3761623938343832363731616136646233393134656534620a313063373462386664306333663635
+      66353266646666613336623037356263353834656132306636386134353665323931303062376633
+      6663366663383335390a306434613338373064633964393437613734656361366332353137386632
+      35613039616137653839353638366261376238323734376133616430646361643166383265396565
+      3335343731333437363535643066623366346436356435306265
+    peers:
+      - name: A
+        public_key: "wRbaMurAZw3luWX+tWcZBMIS4cA17yjO18sTkCkMX1g="
+        allowed_ips: 10.2.0.2
+      - name: B
+        public_key: "LxtAU/5ITFAYsBVRJLZ0l8y2TWnby5GrZyVRfQxo/0M="
+        allowed_ips: 10.2.0.3
+      - name: C
+        public_key: "gTsYH0Rm8dGIoGM45p90TrWG23Fv8R74B35HjcxDvis="
+        allowed_ips: 10.2.0.4
+
+wireguard_service_before:
+  promet_server: [prometheus-blackbox-exporter, prometheus-node-exporter, prometheus-script-exporter,
+    caddy]
 
 caddy_user: http
 caddy_conf_file: caddy.conf
@@ -25,6 +61,7 @@ caddy_sites:
       import ../defaults
       import ../ssl_defaults
       header / Content-Security-Policy "default-src 'self' 'unsafe-inline' data:; form-action 'self'; frame-ancestors 'self'"
+      header / X-Robots-Tag "all"
 
       proxy / localhost:{{ zeltlager_website_port }} {
         transparent
@@ -36,6 +73,15 @@ caddy_sites:
       import ../ssl_defaults
       rewrite {
         to /google9cea32bbccdb1ab4.html
+      }
+      root /srv/http/html
+    }
+
+    meinzeltlager.com/googlebc9427e754b6efbc.html {
+      import ../defaults
+      import ../ssl_defaults
+      rewrite {
+        to /googlebc9427e754b6efbc.html
       }
       root /srv/http/html
     }
@@ -73,13 +119,138 @@ caddy_sites:
       fastcgi / /run/php-fpm/php-fpm.sock php
     }
 
+  services: |
+    http://services.meinzeltlager.com:{{ caddy_services_port }} {
+      # The site needs to be visited at least once so the stats get included
+      #prometheus {
+        #address {{ local_prometheus_ip }}:{{ caddy_prometheus_exporter_port }}
+      #}
+      import ../defaults
+      bind {{ local_prometheus_ip }}
+
+      #cgi / /srv/http/services.sh
+    }
+
+    http://prometheus.services.meinzeltlager.com:{{ caddy_services_port }} {
+      #prometheus {
+        #address {{ local_prometheus_ip }}:{{ caddy_prometheus_exporter_port }}
+      #}
+      import ../defaults
+      bind {{ local_prometheus_ip }}
+
+      header / Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: ws:; form-action 'self'; frame-ancestors 'self'"
+      proxy / 127.0.0.1:{{ prometheus_port }} {
+        transparent
+      }
+    }
+
+    http://alertmanager.services.meinzeltlager.com:{{ caddy_services_port }} {
+      #prometheus {
+        #address {{ local_prometheus_ip }}:{{ caddy_prometheus_exporter_port }}
+      #}
+      import ../defaults
+      bind {{ local_prometheus_ip }}
+
+      header / Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: ws:; form-action 'self'; frame-ancestors 'self'"
+      proxy / 127.0.0.1:{{ alertmanager_port }} {
+        transparent
+      }
+    }
+
+    http://grafana.services.meinzeltlager.com:{{ caddy_services_port }} {
+      #prometheus {
+        #address {{ local_prometheus_ip }}:{{ caddy_prometheus_exporter_port }}
+      #}
+      import ../defaults
+      bind {{ local_prometheus_ip }}
+
+      header / Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: ws:; form-action 'self'; frame-ancestors 'self'"
+      proxy / 127.0.0.1:{{ grafana_port }} {
+        transparent
+      }
+    }
+
+    http://rspamd.services.meinzeltlager.com:{{ caddy_services_port }} {
+      #prometheus {
+        #address {{ local_prometheus_ip }}:{{ caddy_prometheus_exporter_port }}
+      #}
+      import ../defaults
+      bind {{ local_prometheus_ip }}
+
+      header / Content-Security-Policy "default-src 'self' 'unsafe-inline'; form-action 'self'; frame-ancestors 'self'"
+      proxy / 127.0.0.1:{{ rspamd_port }} {
+        transparent
+      }
+    }
+
+nftables_config: |
+  table ip filter {
+    chain prerouting {
+      type nat hook prerouting priority 0;
+      iifname promet_server tcp dport 80 redirect to :{{ caddy_services_port }}
+    }
+  }
+
+  table inet filter {
+    chain input {
+      type filter hook input priority 0; policy drop;
+
+      # Allow established/related connections
+      ct state {established, related} accept
+      # Drop of invalid connections
+      ct state invalid drop
+
+      # Allow loopback
+      iifname lo accept
+      # Allow WireGuard
+      iifname promet_server accept
+
+      # Drop invalid packets
+      iifname != lo ip daddr 127.0.0.1/8 drop
+      iifname != lo ip6 daddr ::1/128 drop
+
+      # Allow icmp
+      ip protocol icmp accept
+      ip6 nexthdr icmpv6 accept
+
+      # Web
+      tcp dport { 80, 443 } accept
+
+      # Mail: SMTP, IMAP, SMTP submission, IMAPS
+      tcp dport { 25, 143, 587, 993 } limit rate 15/minute accept
+
+      # WireGuard
+      udp dport {{ wireguard_prometheus_port }} accept
+
+      # Allow ssh and avoid brute force
+      tcp dport {{ sshd_port }} limit rate 15/minute accept
+    }
+
+    chain forward {
+      type filter hook forward priority 0; policy drop;
+    }
+
+    chain output {
+      type filter hook output priority 0;
+    }
+  }
+
 sshd_host_settings:
   - regexp: "^#?AllowUsers "
     line: AllowUsers ansible zeltlager alina
 
-acme_path: /var/lib/caddy/acme/acme-v02.api.letsencrypt.org
-dovecot_settings:
-  - 'listen = *, ::'
+postgresql_hba_entries:
+  - { type: local, database: all, user: postgres, auth_method: peer }
+  - { type: local, database: all, user: all, auth_method: peer }
+  - { type: host, database: all, user: all, address: '127.0.0.1/32', auth_method: md5 }
+  - { type: host, database: all, user: all, address: '::1/128', auth_method: md5 }
+  - { type: host, database: all, user: all, address: '10.2.0.0/24', auth_method: md5 }
+
+postgresql_global_config_options:
+  - option: unix_socket_directories
+    value: '{{ postgresql_unix_socket_directories | join(",") }}'
+  - option: listen_addresses
+    value: '*'
 
 php_settings:
   - regexp: "^;?upload_max_filesize"
@@ -93,7 +264,6 @@ php_extensions:
   - intl
   - iconv
 
-postgresql_locale: en_US.UTF-8
 postgres_password: !vault |
   $ANSIBLE_VAULT;1.1;AES256
   62303132373663626233643531353565336166653032333364653038396534373336383535633336
@@ -164,3 +334,34 @@ mediawiki_mail_password: !vault |
   32306565613036646539356565306138653762343766346336613432646539313739633136393032
   3533383035333862310a316637396530323932613061383830383835303364666434383461323036
   34313031646535666264663762383639343166353562393839633831616462326532
+
+alertmanager_mail_password: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  62373633623831626433353662653361343864646633663564346537306239623936643334346333
+  3231663732353535393437313335373766356261373263350a353566663831336563303432326430
+  34653834373732363866626131653539316439316338313431366636333864346239376265623431
+  6139386231383839300a346462643064316431386464376334316633313865366562613665616161
+  63343664646131386439343431363636626461323766616536353966653631656637
+grafana_db_password: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  63373963663938333936383564303362313139616664343863646333616637663539363431616533
+  3561346564336365353133633535386537633562623938350a306438633631353036393235343736
+  32326430363865366366616133336239323032363462393163363330653831326561323835623230
+  3432383962336630640a653637656637616465663633383363313463303737646235643337663832
+  33353365323237316633396131373836623562376664373235646234383432636632
+grafana_admin_password: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  35306438353261313934303731363939306634393537353864333538366264363464653766323731
+  6638386433373366343139613835333833626238353462340a373039653364633338663935346330
+  64316439366134643961383233303865396165366436643663376537366236373463353133633265
+  6335353261316266630a383334346334346636376164376262376164626638663037313736656331
+  62323561613734326266336462633031656531633433656630363263613964373135
+
+test_mail: test@{{ mail_domain }}
+ldap_test_password: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  32383061663266643034373131316239643734353931353066646639323564393231666236383936
+  3763303239346630623463633065663237346339326538380a323632343764346436303762313632
+  30363636643939643961623037363639363564393465323832666234343438353634666631616330
+  6333323034383832390a343130343538306137656664613034316666313538363535343530656562
+  30636163373835356331613433653166303938613435643739353761633831646230

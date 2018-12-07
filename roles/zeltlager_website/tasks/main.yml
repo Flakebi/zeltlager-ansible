@@ -117,6 +117,7 @@
   tags: zeltlager_website_google_auth
 - name: Google authentication file
   copy:
-    src: google9cea32bbccdb1ab4.html
+    src: "{{ item }}"
     dest: /srv/http/html/
+  with_items: [googlebc9427e754b6efbc.html, google9cea32bbccdb1ab4.html]
   tags: zeltlager_website_google_auth

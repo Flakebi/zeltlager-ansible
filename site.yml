@@ -21,6 +21,26 @@
       tags: sshd
       when: "'sshd' in roles"
     - import_role:
+        name: nftables
+      tags: nftables
+      when: "'nftables' in roles"
+    - import_role:
+        name: wireguard
+      tags: wireguard
+      when: "'wireguard' in roles"
+    - import_role:
+        name: prometheus
+      tags: prometheus
+      when: "'prometheus' in roles"
+    - import_role:
+        name: prometheus_script_exporter
+      tags: prometheus_script_exporter
+      when: "'prometheus_script_exporter' in roles"
+    - import_role:
+        name: prometheus_telegram_bot
+      tags: prometheus_telegram_bot
+      when: "'prometheus_telegram_bot' in roles"
+    - import_role:
         name: postgresql
       tags: postgresql
       when: "'postgresql' in roles"

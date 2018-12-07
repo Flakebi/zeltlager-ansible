@@ -10,7 +10,7 @@ route:
   group_by: [alertname]
   group_wait: 10s
   #repeat_interval: 1h # Default 4h
-  receiver: admin-mail
+  receiver: admin-message
   routes:
     - receiver: admin-mail
       match:
@@ -20,11 +20,10 @@ receivers:
   - name: admin-mail
     email_configs:
       - to: '{{ alertmanager_admin_mail }}'
-    webhook_configs:
-      - url: http://127.0.0.1:{{ prometheus_telegram_bot_port }}/alert/{{ prometheus_telegram_bot_chat }}
-        send_resolved: False
 
   - name: admin-message
+    email_configs:
+      - to: '{{ alertmanager_admin_mail }}'
     webhook_configs:
       - url: http://127.0.0.1:{{ prometheus_telegram_bot_port }}/alert/{{ prometheus_telegram_bot_chat }}
         send_resolved: False

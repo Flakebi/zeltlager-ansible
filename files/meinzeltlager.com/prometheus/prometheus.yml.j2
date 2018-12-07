@@ -19,9 +19,9 @@ scrape_configs:
       - targets:
         - '{{ local_prometheus_ip }}:{{ prometheus_node_exporter_port }}'
 
-  - job_name: 'caddy'
-    static_configs:
-      - targets: ['{{ local_prometheus_ip }}:{{ caddy_prometheus_exporter_port }}']
+  #- job_name: 'caddy'
+    #static_configs:
+      #- targets: ['{{ local_prometheus_ip }}:{{ caddy_prometheus_exporter_port }}']
 
   - job_name: 'mail'
     scrape_interval: 15m
@@ -38,16 +38,17 @@ scrape_configs:
       module: [http_2xx]
     static_configs:
       - targets:
-          - 'http://services.meinzeltlager.com:{{ caddy_services_port }}'
-          - 'http://alertmanager.services.flakebi.de:{{ caddy_services_port }}'
-          - 'http://grafana.services.flakebi.de:{{ caddy_services_port }}'
-          - 'http://prometheus.services.flakebi.de:{{ caddy_services_port }}'
-          - 'http://rspamd.services.flakebi.de:{{ caddy_services_port }}'
+          #- 'http://services.meinzeltlager.com:{{ caddy_services_port }}'
+          - 'http://alertmanager.services.meinzeltlager.com:{{ caddy_services_port }}'
+          - 'http://grafana.services.meinzeltlager.com:{{ caddy_services_port }}'
+          - 'http://prometheus.services.meinzeltlager.com:{{ caddy_services_port }}'
+          - 'http://rspamd.services.meinzeltlager.com:{{ caddy_services_port }}'
         labels:
           category: private
       - targets:
           - 'https://meinzeltlager.com'
           - 'https://www.meinzeltlager.com'
+          - 'https://wiki.meinzeltlager.com'
         labels:
           category: public
     relabel_configs:
