@@ -73,8 +73,8 @@ groups:
             {{ with printf "(1 - sum(irate(node_cpu_seconds_total{mode='idle', instance='%[1]s'}[5m])) / sum(irate(node_cpu_seconds_total{instance='%[1]s'}[5m]))) * 100"
             $labels.instance | query }}{{ . | first | value | humanize }} % {{ end }}load in the last hour
 
-      - alert: MailDown
-        expr: 'script_success{script="mail"} == 0'
+      - alert: ScriptDown
+        expr: 'script_success == 0'
         labels:
           severity: error
         annotations:

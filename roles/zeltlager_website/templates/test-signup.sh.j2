@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+filename=`mktemp -t mail-XXXXXXXX.txt`
+id="$RANDOM"
+subject="Test $id"
+
+fail() {
+	echo "$1" > /dev/stderr
+	exit 1
+}
+
+search_for_subject() {
+	search_subject="$1"
+	search_folder="$2"
+	search_output=`curl -s --url "imaps://{{ mail_hostname }}:993/$search_folder" \
+		--ssl-reqd \
+		--user '{{ test_mail }}:{{ ldap_test_password }}' \
+		--request "UID SEARCH SUBJECT \"$search_subject\"" \
+		|| fail "Failed to check for mail in the folder $search_folder"`
+
+	printf '%s' "$search_output" | cut -f3 -d' ' | tr -d '[:space:]'
+}
+
+# Signup
+curl -X POST \
+	-H 'Referer: https://{{ mail_domain }}/anmeldung' \
+	-H 'Content-Type: application/x-www-form-urlencoded' \
+	--data-urlencode "vorname=$subject" \
+	--data-urlencode 'nachname=b' \
+	--data-urlencode 'geburtsdatum=1.1.2010' \
+	--data-urlencode 'geschlecht=w' \
+	--data-urlencode 'schwimmer=true' \
+	--data-urlencode 'vegetarier=false' \
+	--data-urlencode 'tetanus_impfung=true' \
+	--data-urlencode 'eltern_name=d' \
+	--data-urlencode 'eltern_mail={{ test_mail }}' \
+	--data-urlencode 'eltern_handynummer=1' \
+	--data-urlencode 'strasse=g' \
+	--data-urlencode 'hausnummer=1' \
+	--data-urlencode 'plz=80000' \
+	--data-urlencode 'ort=i' \
+	--data-urlencode 'besonderheiten=' \
+	--data-urlencode 'agb=true' \
+	'https://{{ mail_domain }}/signup-send'
+
+echo 'Sent signup'
+sleep 2
+
+# Check in inbox
+folder="INBOX"
+echo "Check for mail in $folder"
+mail_id=`search_for_subject "$subject" "$folder"`
+
+if [[ -z $mail_id ]]; then
+	# Check in spam
+	folder="Spam"
+	echo "Check for mail in $folder"
+	mail_id=`search_for_subject "$subject" "$folder"`
+
+	if [[ -z $mail_id ]]; then
+		fail 'Failed to receive mail'
+	fi
+fi
+printf "Found mail %s in %s\n" "$mail_id" "$folder"
+
+# Remove the mail
+output=`curl -s --url "imaps://{{ mail_hostname }}:993/$folder" --ssl-reqd \
+	--user '{{ test_mail }}:{{ ldap_test_password }}' \
+	--request "UID STORE $mail_id +Flags \\Deleted" \
+	|| fail "Failed to mark the mail deleted"`
+
+if [[ -z $output ]]; then
+	fail 'Failed to mark mail deleted (empty output)'
+fi
+
+echo 'Marked mail as deleted'
+
+output=`curl -s --url "imaps://{{ mail_hostname }}:993/$folder" --ssl-reqd \
+	--user '{{ test_mail }}:{{ ldap_test_password }}' \
+	--request "UID EXPUNGE $mail_id" \
+	|| fail "Failed to delete the mail"`
+
+if [[ -z $output ]]; then
+	fail 'Failed to delete the mail (empty output)'
+fi
+
+echo 'Deleted mail'
