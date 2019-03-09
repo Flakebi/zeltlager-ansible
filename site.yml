@@ -76,3 +76,7 @@
         name: zeltlager_app
       tags: zeltlager_app
       when: "'zeltlager_app' in roles"
+    - import_role:
+        name: sentry
+      tags: sentry
+      when: "'sentry' in roles"

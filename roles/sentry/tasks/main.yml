@@ -1,0 +1,42 @@
+---
+- name: Install sentry
+  command: yay -S --noconfirm --needed sentry
+  become: True
+  become_user: ansible
+
+- name: Create sentry database user
+  postgresql_user:
+    name: sentry
+    password: '{{ sentry_db_password }}'
+    encrypted: True
+    role_attr_flags: LOGIN
+  become: True
+  become_user: postgres
+- name: Create sentry database
+  postgresql_db:
+    name: sentry
+    owner: sentry
+    lc_collate: '{{ postgresql_locale }}'
+    lc_ctype: '{{ postgresql_locale }}'
+    encoding: UTF-8
+    template: template0
+  become: True
+  become_user: postgres
+
+- name: Sentry configuration
+  template:
+    src: '../templates/config.yml.j2'
+    dest: /etc/sentry/config.yml
+    mode: 0600
+    owner: sentry
+    group: sentry
+- name: Sentry configuration
+  template:
+    src: '../templates/sentry.conf.py.j2'
+    dest: /etc/sentry/sentry.conf.py
+    mode: 0600
+    owner: sentry
+    group: sentry
+
+- name: Start and enable sentry
+  service: name=sentry state=started enabled=True

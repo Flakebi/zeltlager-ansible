@@ -221,3 +221,4 @@ prometheus_script_exporter_port: 9010
 prometheus_telegram_bot_port: 9011
 caddy_services_port: 9012
 discourse_port: 9013
+sentry_port: 9014
