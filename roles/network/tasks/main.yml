@@ -1,0 +1,17 @@
+---
+- name: Set network config
+  copy:
+    dest: /etc/systemd/network/50-config.network
+    content: "{{ network_config }}"
+  when: network_config is defined
+  notify: Restart networkd
+
+- name: Set network config
+  copy:
+    dest: /etc/systemd/network/50-config.network
+    src: 50-config.network
+  when: network_config is not defined
+  notify: Restart networkd
+
+- name: Enable networkd
+  service: name=systemd-networkd state=started enabled=True

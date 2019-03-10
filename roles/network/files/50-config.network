@@ -1,0 +1,13 @@
+[Match]
+Name=ens3
+
+[Network]
+DHCP=ipv4
+
+[Address]
+Address=2a01:4f8:bc:af6::1/64
+
+[Route]
+Gateway=2a01:4f8:bc:a00::1
+GatewayOnlink=yes
+Destination=::/0

@@ -25,6 +25,10 @@
       tags: nftables
       when: "'nftables' in roles"
     - import_role:
+        name: network
+      tags: network
+      when: "'network' in roles"
+    - import_role:
         name: wireguard
       tags: wireguard
       when: "'wireguard' in roles"
