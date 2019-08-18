@@ -57,6 +57,24 @@ scrape_configs:
       - targets:
           - 'https://meinzeltlager.com'
           - 'https://www.meinzeltlager.com'
+        labels:
+          category: public
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: '{{ local_prometheus_ip }}:{{ prometheus_blackbox_exporter_port }}'
+
+  - job_name: 'blackbox_http_wiki'
+    metrics_path: /probe
+    # The wiki sometimes takes a bit longer
+    scrape_timeout: 90s
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
           - 'https://wiki.meinzeltlager.com'
         labels:
           category: public
