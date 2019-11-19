@@ -2,19 +2,19 @@ groups:
   - name: standard
     rules:
       - alert: PartitionFull
-        expr: 'node_filesystem_free_bytes / node_filesystem_size_bytes < 0.05'
+        expr: 'node_filesystem_avail_bytes / node_filesystem_size_bytes < 0.1'
         labels:
           severity: warning
         annotations:
-          summary: "Partition has less than 5% free space left"
+          summary: "Partition has less than 10% free space left"
           description: >
             Device {{ $labels.device }} mounted at {{ $labels.mountpoint }} from
             {{ $labels.instance }} is nearly full{{ with printf
-            "node_filesystem_free_bytes{instance='%[1]s', device='%[2]s'}
+            "node_filesystem_avail_bytes{instance='%[1]s', device='%[2]s'}
             / node_filesystem_size_bytes{instance='%[1]s', device='%[2]s'} * 100"
             $labels.instance $labels.device | query }}{{
             $free_percent := . | first | value }}{{ with printf
-            "node_filesystem_free_bytes{instance='%s', device='%s'}"
+            "node_filesystem_avail_bytes{instance='%s', device='%s'}"
             $labels.instance $labels.device | query }}{{
             $free := . | first | value }}
             ({{ $free_percent | humanize }}% / {{ $free | humanize }} free){{

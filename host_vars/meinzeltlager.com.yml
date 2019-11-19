@@ -36,8 +36,8 @@ wireguard_configs:
       35613039616137653839353638366261376238323734376133616430646361643166383265396565
       3335343731333437363535643066623366346436356435306265
     peers:
-      - name: A
-        public_key: "wRbaMurAZw3luWX+tWcZBMIS4cA17yjO18sTkCkMX1g="
+      - name: majestix
+        public_key: "HWtgC3zTmVp/8S3b4w2YEY8An5CYTu9snNEgvEiigC0="
         allowed_ips: 10.2.0.2
       - name: B
         public_key: "LxtAU/5ITFAYsBVRJLZ0l8y2TWnby5GrZyVRfQxo/0M="
