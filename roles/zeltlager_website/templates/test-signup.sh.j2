@@ -24,23 +24,23 @@ search_for_subject() {
 curl -X POST \
 	-H 'Referer: https://{{ mail_domain }}/anmeldung' \
 	-H 'Content-Type: application/x-www-form-urlencoded' \
-	--data-urlencode "vorname=$subject" \
-	--data-urlencode 'nachname=b' \
-	--data-urlencode 'geburtsdatum=1.1.2010' \
-	--data-urlencode 'geschlecht=w' \
-	--data-urlencode 'schwimmer=true' \
-	--data-urlencode 'vegetarier=false' \
-	--data-urlencode 'tetanus_impfung=true' \
-	--data-urlencode 'eltern_name=d' \
-	--data-urlencode 'eltern_mail={{ test_mail }}' \
-	--data-urlencode 'eltern_handynummer=1' \
-	--data-urlencode 'strasse=g' \
-	--data-urlencode 'hausnummer=1' \
-	--data-urlencode 'plz=80000' \
-	--data-urlencode 'ort=i' \
-	--data-urlencode 'besonderheiten=' \
-	--data-urlencode 'agb=true' \
-	'https://{{ mail_domain }}/signup-send'
+	--data-raw "vorname=$subject" \
+	--data-raw 'nachname=b' \
+	--data-raw 'geburtsdatum=1.1.2010' \
+	--data-raw 'geschlecht=w' \
+	--data-raw 'schwimmer=true' \
+	--data-raw 'vegetarier=false' \
+	--data-raw 'tetanus_impfung=true' \
+	--data-raw 'eltern_name=d' \
+	--data-raw 'eltern_mail={{ test_mail }}' \
+	--data-raw 'eltern_handynummer=1' \
+	--data-raw 'strasse=g' \
+	--data-raw 'hausnummer=1' \
+	--data-raw 'plz=80000' \
+	--data-raw 'ort=i' \
+	--data-raw 'besonderheiten=' \
+	--data-raw 'agb=true' \
+	'https://{{ mail_domain }}/signup-send' || fail "Failed to request signup"
 
 echo 'Sent signup'
 sleep 2
