@@ -2,11 +2,11 @@ groups:
   - name: standard
     rules:
       - alert: PartitionFull
-        expr: 'node_filesystem_avail_bytes / node_filesystem_size_bytes < 0.1'
+        expr: 'node_filesystem_avail_bytes / node_filesystem_size_bytes < 0.05'
         labels:
           severity: warning
         annotations:
-          summary: "Partition has less than 10% free space left"
+          summary: "Partition has less than 5% free space left"
           description: >
             Device {{ $labels.device }} mounted at {{ $labels.mountpoint }} from
             {{ $labels.instance }} is nearly full{{ with printf
