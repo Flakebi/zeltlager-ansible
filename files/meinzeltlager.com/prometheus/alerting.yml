@@ -75,6 +75,7 @@ groups:
 
       - alert: ScriptDown
         expr: 'script_success == 0'
+        for: 15m
         labels:
           severity: error
         annotations:
@@ -83,7 +84,7 @@ groups:
 
       - alert: BlackboxProbes
         expr: 'probe_success == 0'
-        for: 5m
+        for: 15m
         labels:
           severity: error
         annotations:
