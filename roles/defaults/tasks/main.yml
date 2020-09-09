@@ -78,7 +78,10 @@
       with_items:
         - update.service
         - update.timer
+        - pacman-clean.service
+        - pacman-clean.timer
     - service: name=update.timer state=started enabled=true
+    - service: name=pacman-clean.timer state=started enabled=true
   when: ansible_os_family == 'Archlinux' and enable_autoupdate
   tags: autoupdate
 - name: Autoupdate

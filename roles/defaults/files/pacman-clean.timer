@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily pacman clean
+
+[Timer]
+# Every day
+OnCalendar=daily
+RandomizedDelaySec=2h
+Persistent=true
+
+[Install]
+WantedBy=timers.target
