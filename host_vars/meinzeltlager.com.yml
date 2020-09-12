@@ -62,148 +62,77 @@ caddy_sites:
     meinzeltlager.com {
       import ../defaults
       import ../ssl_defaults
-      header / Content-Security-Policy "default-src 'self' 'unsafe-inline' data:; form-action 'self'; frame-ancestors 'self'"
+      header Content-Security-Policy "default-src 'self' 'unsafe-inline' data:; form-action 'self'; frame-ancestors 'self'"
 
-      proxy / localhost:{{ zeltlager_website_port }} {
-        transparent
-      }
-    }
+      root * /srv/http/html
+      file_server /google9cea32bbccdb1ab4.html
+      file_server /googlebc9427e754b6efbc.html
 
-    meinzeltlager.com/google9cea32bbccdb1ab4.html {
-      import ../defaults
-      import ../ssl_defaults
-      rewrite {
-        to /google9cea32bbccdb1ab4.html
-      }
-      root /srv/http/html
-    }
-
-    meinzeltlager.com/googlebc9427e754b6efbc.html {
-      import ../defaults
-      import ../ssl_defaults
-      rewrite {
-        to /googlebc9427e754b6efbc.html
-      }
-      root /srv/http/html
+      reverse_proxy localhost:{{ zeltlager_website_port }}
     }
 
     www.meinzeltlager.com {
-      redir 301 {
-        / https://meinzeltlager.com{uri}
-        }
+      redir https://meinzeltlager.com{uri} 301
     }
 
   wiki.meinzeltlager.com: |
     wiki.meinzeltlager.com {
       import ../defaults
       import ../ssl_defaults
-      header / Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' data:; form-action 'self'; frame-ancestors 'self'"
+      header Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' data:; form-action 'self'; frame-ancestors 'self'"
 
-      root /usr/share/webapps/mediawiki
-      fastcgi / /run/php-fpm/php-fpm.sock php {
-        except /images
+      file_server
+      root * /usr/share/webapps/mediawiki
+      @no-images {
+        not path /images/*
       }
-      status 404 /images/deleted
-      rewrite /wiki {
-        r /(.*)
-        to /index.php?title={1}
-      }
-    }
-
-  discourse.meinzeltlager.com: |
-    discourse.meinzeltlager.com {
-      import ../defaults
-      import ../ssl_defaults
-      header / Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' data:; form-action 'self'; frame-ancestors 'self'"
-
-      proxy / localhost:{{ discourse_port }} {
-        transparent
-      }
-    }
-
-  sentry.meinzeltlager.com: |
-    sentry.meinzeltlager.com {
-      import ../defaults
-      import ../ssl_defaults
-      header / Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' data:; form-action 'self'; frame-ancestors 'self'"
-
-      proxy / localhost:{{ sentry_port }} {
-        transparent
-      }
+      php_fastcgi @no-images unix//run/php-fpm/php-fpm.sock
+      respond /images/deleted/* 404
+      rewrite /wiki/* /index.php?title={path}
     }
 
   webapps: |
-    *:8080 {
+    http://*:8080 {
       import ../defaults
-      header / Content-Security-Policy "default-src 'self' 'unsafe-inline' data: ws:"
+      header Content-Security-Policy "default-src 'self' 'unsafe-inline' data: ws:"
       bind 127.0.0.1
 
-      root /usr/share/webapps
-      fastcgi / /run/php-fpm/php-fpm.sock php
+      file_server
+      root * /usr/share/webapps
+      php_fastcgi unix//run/php-fpm/php-fpm.sock
     }
 
   services: |
-    http://services.meinzeltlager.com:{{ caddy_services_port }} {
-      # The site needs to be visited at least once so the stats get included
-      #prometheus {
-        #address {{ local_prometheus_ip }}:{{ caddy_prometheus_exporter_port }}
-      #}
-      import ../defaults
-      bind {{ local_prometheus_ip }}
-
-      #cgi / /srv/http/services.sh
-    }
-
     http://prometheus.services.meinzeltlager.com:{{ caddy_services_port }} {
-      #prometheus {
-        #address {{ local_prometheus_ip }}:{{ caddy_prometheus_exporter_port }}
-      #}
       import ../defaults
       bind {{ local_prometheus_ip }}
 
-      header / Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: ws:; form-action 'self'; frame-ancestors 'self'"
-      proxy / 127.0.0.1:{{ prometheus_port }} {
-        transparent
-      }
+      header Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: ws:; form-action 'self'; frame-ancestors 'self'"
+      reverse_proxy 127.0.0.1:{{ prometheus_port }}
     }
 
     http://alertmanager.services.meinzeltlager.com:{{ caddy_services_port }} {
-      #prometheus {
-        #address {{ local_prometheus_ip }}:{{ caddy_prometheus_exporter_port }}
-      #}
       import ../defaults
       bind {{ local_prometheus_ip }}
 
-      header / Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: ws:; form-action 'self'; frame-ancestors 'self'"
-      proxy / 127.0.0.1:{{ alertmanager_port }} {
-        transparent
-      }
+      header Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: ws:; form-action 'self'; frame-ancestors 'self'"
+      reverse_proxy 127.0.0.1:{{ alertmanager_port }}
     }
 
     http://grafana.services.meinzeltlager.com:{{ caddy_services_port }} {
-      #prometheus {
-        #address {{ local_prometheus_ip }}:{{ caddy_prometheus_exporter_port }}
-      #}
       import ../defaults
       bind {{ local_prometheus_ip }}
 
-      header / Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: ws:; form-action 'self'; frame-ancestors 'self'"
-      proxy / 127.0.0.1:{{ grafana_port }} {
-        transparent
-      }
+      header Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: ws:; form-action 'self'; frame-ancestors 'self'"
+      reverse_proxy 127.0.0.1:{{ grafana_port }}
     }
 
     http://rspamd.services.meinzeltlager.com:{{ caddy_services_port }} {
-      #prometheus {
-        #address {{ local_prometheus_ip }}:{{ caddy_prometheus_exporter_port }}
-      #}
       import ../defaults
       bind {{ local_prometheus_ip }}
 
-      header / Content-Security-Policy "default-src 'self' 'unsafe-inline'; form-action 'self'; frame-ancestors 'self'"
-      proxy / 127.0.0.1:{{ rspamd_port }} {
-        transparent
-      }
+      header Content-Security-Policy "default-src 'self' 'unsafe-inline'; form-action 'self'; frame-ancestors 'self'"
+      reverse_proxy 127.0.0.1:{{ rspamd_port }}
     }
 
 nftables_config: |

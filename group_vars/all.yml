@@ -123,16 +123,19 @@ caddy_conf_dir: /etc/caddy
 
 caddy_includes:
   defaults: |
-    header / Content-Security-Policy "default-src 'self' data: ws:; form-action 'self'; frame-ancestors 'self'"
-    header / Referrer-Policy "no-referrer-when-downgrade"
-    header / X-Content-Type-Options "nosniff"
-    header / X-Frame-Options "SAMEORIGIN"
-    header / X-Permitted-Cross-Domain-Policies "none"
-    header / X-XSS-Protection "1; mode=block"
-    errors stderr
+    header Content-Security-Policy "default-src 'self' data: ws:; form-action 'self'; frame-ancestors 'self'"
+    header Referrer-Policy "no-referrer-when-downgrade"
+    header X-Content-Type-Options "nosniff"
+    header X-Frame-Options "SAMEORIGIN"
+    header X-Permitted-Cross-Domain-Policies "none"
+    header X-XSS-Protection "1; mode=block"
+    log {
+      level WARN
+      format console
+    }
 
   ssl_defaults: |
-    header / Strict-Transport-Security "max-age=2592000" # 30d
+    header Strict-Transport-Security "max-age=2592000" # 30d
 
 enable_autoupdate: True
 sshd_host_settings: []

@@ -1,6 +1,6 @@
 ---
 - name: Install caddy
-  aur: name=caddy user=ansible
+  aur: name=caddy2 user=ansible
   when: ansible_os_family == 'Archlinux'
 - name: Install caddy
   import_tasks: manual.yml
@@ -34,7 +34,7 @@
   tags: caddy_config
 
 - name: Create Caddyfile
-  copy: content="import sites/*" dest="{{ caddy_conf_dir }}/{{ caddy_conf_file }}" owner={{ caddy_user }}
+  copy: content="import {{ caddy_conf_dir }}/sites/*" dest="{{ caddy_conf_dir }}/{{ caddy_conf_file }}" owner={{ caddy_user }}
   notify: Reload caddy
 
 - name: Enable caddy
