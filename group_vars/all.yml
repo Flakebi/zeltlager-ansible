@@ -1,7 +1,7 @@
 ---
 roles: []
 
-acme_path: /var/lib/caddy/acme/acme-v02.api.letsencrypt.org
+acme_path: /var/lib/caddy/certificates/acme-v02.api.letsencrypt.org-directory
 
 mail_domain: meinzeltlager.com
 mail_hostname: mail.meinzeltlager.com
@@ -83,8 +83,8 @@ postfix_settings:
   smtpd_tls_security_level: may
   smtpd_tls_auth_only: 'yes'
   smtpd_tls_received_header: 'yes'
-  smtpd_tls_cert_file: '{{ acme_path }}/sites/{{ mail_hostname }}/{{ mail_hostname }}.crt'
-  smtpd_tls_key_file: '{{ acme_path }}/sites/{{ mail_hostname }}/{{ mail_hostname }}.key'
+  smtpd_tls_cert_file: '{{ acme_path }}/{{ mail_hostname }}/{{ mail_hostname }}.crt'
+  smtpd_tls_key_file: '{{ acme_path }}/{{ mail_hostname }}/{{ mail_hostname }}.key'
   smtpd_tls_dh1024_param_file: ${config_directory}/dhparams.pem
   smtpd_tls_protocols: '!SSLv2, !SSLv3'
   smtpd_tls_ciphers: high
