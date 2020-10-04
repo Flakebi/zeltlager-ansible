@@ -65,10 +65,12 @@ caddy_sites:
       header Content-Security-Policy "default-src 'self' 'unsafe-inline' data:; form-action 'self'; frame-ancestors 'self'"
 
       root * /srv/http/html
-      file_server /google9cea32bbccdb1ab4.html
-      file_server /googlebc9427e754b6efbc.html
+      route {
+        file_server /google9cea32bbccdb1ab4.html
+        file_server /googlebc9427e754b6efbc.html
 
-      reverse_proxy localhost:{{ zeltlager_website_port }}
+        reverse_proxy localhost:{{ zeltlager_website_port }}
+      }
     }
 
     www.meinzeltlager.com {
