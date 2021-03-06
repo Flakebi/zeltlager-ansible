@@ -8,4 +8,4 @@ postfix_os_settings:
   shlib_directory: /usr/lib/postfix
   inet_protocols: all
   smtp_tls_CAfile: '/etc/ssl/certs/ca-certificates.crt'
-postfix_packages: [postfix]
+postfix_packages: [postfix, postfix-pgsql]
